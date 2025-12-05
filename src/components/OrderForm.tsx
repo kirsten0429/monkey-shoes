@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Plus, Trash2, Save } from 'lucide-react';
 import type { OrderItem, PaymentMethod } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, Plus, Trash2, Save, Calendar } from 'lucide-react';
 import { saveOrder, getCustomers } from '../services/storage';
 
 // 常見品牌與顏色清單
@@ -8,6 +8,8 @@ const BRANDS = ['Nike', 'Adidas', 'New Balance', 'Jordan', 'Converse', 'Puma', '
 const COLORS = ['白', '黑', '灰', '紅', '藍', '綠', '黃', '粉', '全白', '全黑', '多色'];
 
 export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
+  // 預設日期為今天 (格式 YYYY-MM-DD)
+  const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [items, setItems] = useState<OrderItem[]>([{ id: '1', name: '', price: 250 }]);
@@ -81,6 +83,9 @@ export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
       return;
     }
 
+    // 將選擇的日期字串轉為 timestamp
+    const selectedDateTimestamp = new Date(orderDate).getTime();
+
     const order = {
       id: Date.now().toString(),
       customerName: name,
@@ -89,7 +94,7 @@ export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
       totalAmount,
       isPaid,
       paymentMethod,
-      createdAt: Date.now(),
+      createdAt: selectedDateTimestamp, // 使用選擇的日期
       photoPreview: photoPreview || undefined
     };
 
@@ -102,6 +107,7 @@ export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
     setItems([{ id: Date.now().toString(), name: '', price: 250 }]);
     setIsPaid(false);
     setPhotoPreview(null);
+    setOrderDate(new Date().toISOString().split('T')[0]); // Reset date to today
     onSuccess();
   };
 
@@ -109,6 +115,20 @@ export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
     <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
       <h2 className="text-xl font-bold mb-4 text-ikea-dark border-b pb-2">新增接單</h2>
       
+      {/* Date Selection */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">接單日期</label>
+        <div className="relative">
+          <input 
+            type="date"
+            value={orderDate}
+            onChange={(e) => setOrderDate(e.target.value)}
+            className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ikea-blue outline-none bg-white text-gray-800 font-medium"
+          />
+          <Calendar className="absolute left-3 top-3.5 text-gray-400" size={20} />
+        </div>
+      </div>
+
       {/* Customer Info */}
       <div className="space-y-4 mb-6">
         <div>

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Package, CheckCircle, XCircle, DollarSign, Image as ImageIcon } from 'lucide-react';
 import type { Order } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Search, Package, CheckCircle, XCircle, DollarSign, Image as ImageIcon, ShoppingBag, CalendarCheck } from 'lucide-react';
 import { getOrders, updateOrder } from '../services/storage';
 
 export const OrderList: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'ALL' | 'UNPAID'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'UNPAID' | 'UNPICKED'>('ALL');
 
   useEffect(() => {
     setOrders(getOrders());
@@ -18,11 +18,24 @@ export const OrderList: React.FC = () => {
     setOrders(getOrders()); // Refresh
   };
 
+  const togglePickup = (order: Order) => {
+    const updated = {
+      ...order,
+      pickupDate: order.pickupDate ? undefined : Date.now() // Toggle: Set date or remove it
+    };
+    updateOrder(updated);
+    setOrders(getOrders());
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchSearch = 
       order.customerName.includes(searchTerm) || 
       order.customerPhone.includes(searchTerm);
-    const matchFilter = filter === 'ALL' || (filter === 'UNPAID' && !order.isPaid);
+      
+    let matchFilter = true;
+    if (filter === 'UNPAID') matchFilter = !order.isPaid;
+    if (filter === 'UNPICKED') matchFilter = !order.pickupDate;
+    
     return matchSearch && matchFilter;
   });
 
@@ -30,7 +43,7 @@ export const OrderList: React.FC = () => {
     <div className="space-y-4">
       {/* Search Bar */}
       <div className="sticky top-0 bg-gray-50 pt-2 pb-4 z-10">
-        <div className="relative shadow-sm">
+        <div className="relative shadow-sm mb-3">
           <input
             type="text"
             placeholder="搜尋姓名或電話..."
@@ -41,10 +54,10 @@ export const OrderList: React.FC = () => {
           <Search className="absolute left-3 top-3.5 text-gray-400" size={20} />
         </div>
         
-        <div className="flex gap-2 mt-3">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <button
             onClick={() => setFilter('ALL')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition ${
               filter === 'ALL' ? 'bg-ikea-dark text-white' : 'bg-white text-gray-600 border border-gray-200'
             }`}
           >
@@ -52,11 +65,19 @@ export const OrderList: React.FC = () => {
           </button>
           <button
             onClick={() => setFilter('UNPAID')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition ${
               filter === 'UNPAID' ? 'bg-red-500 text-white' : 'bg-white text-gray-600 border border-gray-200'
             }`}
           >
             未付款
+          </button>
+          <button
+            onClick={() => setFilter('UNPICKED')}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition ${
+              filter === 'UNPICKED' ? 'bg-ikea-blue text-white' : 'bg-white text-gray-600 border border-gray-200'
+            }`}
+          >
+            未取件
           </button>
         </div>
       </div>
@@ -70,16 +91,18 @@ export const OrderList: React.FC = () => {
           </div>
         ) : (
           filteredOrders.map(order => (
-            <div key={order.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div key={order.id} className={`bg-white rounded-xl p-4 shadow-sm border ${order.pickupDate ? 'border-gray-200 opacity-75' : 'border-gray-100'}`}>
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <div className="font-bold text-lg text-ikea-dark">{order.customerName}</div>
                   <div className="text-gray-500 text-sm font-mono">{order.customerPhone}</div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    {new Date(order.createdAt).toLocaleDateString()}
+                  <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                    <CalendarCheck size={12} />
+                    接單: {new Date(order.createdAt).toLocaleDateString()}
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
+                   {/* 付款狀態按鈕 */}
                    <button
                     onClick={() => togglePayment(order)}
                     className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-bold transition ${
@@ -89,11 +112,21 @@ export const OrderList: React.FC = () => {
                     }`}
                   >
                     {order.isPaid ? <CheckCircle size={12}/> : <XCircle size={12}/>}
-                    {order.isPaid ? '已付款' : '未付'}
+                    {order.isPaid ? '已付款' : '未付款'}
                   </button>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                    {order.paymentMethod === 'CASH' ? '現金' : 'LinePay'}
-                  </span>
+                  
+                  {/* 取件狀態按鈕 */}
+                  <button
+                    onClick={() => togglePickup(order)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-bold transition ${
+                      order.pickupDate
+                        ? 'bg-gray-200 text-gray-600'
+                        : 'bg-ikea-yellow text-ikea-blue'
+                    }`}
+                  >
+                    <ShoppingBag size={12} />
+                    {order.pickupDate ? '已取件' : '待取件'}
+                  </button>
                 </div>
               </div>
 
@@ -107,14 +140,24 @@ export const OrderList: React.FC = () => {
               </div>
 
               <div className="flex justify-between items-center mt-3 pt-2 border-t border-dashed border-gray-200">
-                <div className="flex gap-2">
-                   {order.photoPreview && (
-                     <div className="relative group">
-                        <ImageIcon size={20} className="text-gray-400" />
-                        {/* Tooltip-ish preview for desktop, click needed for mobile really, but simple icon indicates photo exists */}
-                     </div>
-                   )}
+                <div className="flex flex-col gap-1">
+                  <div className="flex gap-2">
+                     {order.photoPreview && (
+                       <div className="relative group">
+                          <ImageIcon size={20} className="text-gray-400" />
+                       </div>
+                     )}
+                     <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded h-fit">
+                        {order.paymentMethod === 'CASH' ? '現金' : 'LinePay'}
+                     </span>
+                  </div>
+                  {order.pickupDate && (
+                    <span className="text-[10px] text-gray-400">
+                      取件日: {new Date(order.pickupDate).toLocaleDateString()}
+                    </span>
+                  )}
                 </div>
+                
                 <div className="flex items-center gap-1 text-ikea-blue font-bold text-xl">
                   <DollarSign size={18} />
                   {order.totalAmount}

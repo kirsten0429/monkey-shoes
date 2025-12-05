@@ -14,7 +14,8 @@ export interface Order {
   totalAmount: number;
   isPaid: boolean;
   paymentMethod: PaymentMethod;
-  createdAt: number; // timestamp
+  createdAt: number; // 接單日期 timestamp
+  pickupDate?: number; // 取件日期 timestamp (選填)
   notes?: string;
   photoPreview?: string; // Base64 thumbnail string
 }
