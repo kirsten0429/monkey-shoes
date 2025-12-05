@@ -21,6 +21,29 @@ export const updateOrder = (updatedOrder: Order): void => {
 
 export const deleteOrder = (orderId: string): void => {
   const orders = getOrders();
+  const orderToDelete = orders.find(o => o.id === orderId);
+
+  // 同步更新客群資料：扣除次數與金額
+  if (orderToDelete) {
+    const customers = getCustomers();
+    const customerIndex = customers.findIndex(c => c.phone === orderToDelete.customerPhone);
+    
+    if (customerIndex !== -1) {
+      // 確保不會變成負數
+      const newVisitCount = Math.max(0, customers[customerIndex].visitCount - 1);
+      const newTotalSpent = Math.max(0, customers[customerIndex].totalSpent - orderToDelete.totalAmount);
+
+      customers[customerIndex] = {
+        ...customers[customerIndex],
+        visitCount: newVisitCount,
+        totalSpent: newTotalSpent
+      };
+      
+      localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customers));
+    }
+  }
+
+  // 刪除訂單
   const newOrders = orders.filter(o => o.id !== orderId);
   localStorage.setItem(ORDERS_KEY, JSON.stringify(newOrders));
 };
