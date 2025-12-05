@@ -1,0 +1,7 @@
+{
+  "name": "Monkey Shoe Cleaning Manager",
+  "description": "Mobile-first shop management tool with IKEA-inspired design for intake, tracking, and reporting.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
