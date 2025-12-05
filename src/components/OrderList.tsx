@@ -1,6 +1,6 @@
-import type { Order } from '../types';
+import type { Order, PaymentMethod } from '../types';
 import React, { useState, useEffect } from 'react';
-import { Search, Package, CheckCircle, XCircle, DollarSign, Image as ImageIcon, ShoppingBag, CalendarCheck } from 'lucide-react';
+import { Search, Package, CheckCircle, XCircle, DollarSign, Image as ImageIcon, ShoppingBag, CalendarCheck, Wallet } from 'lucide-react';
 import { getOrders, updateOrder } from '../services/storage';
 
 export const OrderList: React.FC = () => {
@@ -16,6 +16,13 @@ export const OrderList: React.FC = () => {
     const updated = { ...order, isPaid: !order.isPaid };
     updateOrder(updated);
     setOrders(getOrders()); // Refresh
+  };
+
+  const togglePaymentMethod = (order: Order) => {
+    const newMethod: PaymentMethod = order.paymentMethod === 'CASH' ? 'LINE_PAY' : 'CASH';
+    const updated = { ...order, paymentMethod: newMethod };
+    updateOrder(updated);
+    setOrders(getOrders());
   };
 
   const togglePickup = (order: Order) => {
@@ -147,9 +154,19 @@ export const OrderList: React.FC = () => {
                           <ImageIcon size={20} className="text-gray-400" />
                        </div>
                      )}
-                     <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded h-fit">
+                     
+                     {/* 可切換的付款方式按鈕 */}
+                     <button 
+                       onClick={() => togglePaymentMethod(order)}
+                       className={`text-xs px-2 py-0.5 rounded h-fit flex items-center gap-1 border transition hover:bg-gray-200 ${
+                         order.paymentMethod === 'LINE_PAY' 
+                           ? 'bg-[#00c300]/10 text-[#00c300] border-[#00c300]/30' 
+                           : 'bg-gray-100 text-gray-600 border-gray-200'
+                       }`}
+                     >
+                        <Wallet size={10} />
                         {order.paymentMethod === 'CASH' ? '現金' : 'LinePay'}
-                     </span>
+                     </button>
                   </div>
                   {order.pickupDate && (
                     <span className="text-[10px] text-gray-400">

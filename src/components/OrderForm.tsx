@@ -7,12 +7,20 @@ import { saveOrder, getCustomers } from '../services/storage';
 const BRANDS = ['Nike', 'Adidas', 'New Balance', 'Jordan', 'Converse', 'Puma', 'Asics', 'Mizuno', 'Skechers', 'Crocs', 'Birkenstock', 'Timberland'];
 const COLORS = ['白', '黑', '灰', '紅', '藍', '綠', '黃', '粉', '全白', '全黑', '多色'];
 
+// 本地表單使用的介面，允許價格暫時為空字串，以便輸入
+interface FormItem {
+  id: string;
+  name: string;
+  price: number | string;
+}
+
 export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
   // 預設日期為今天 (格式 YYYY-MM-DD)
   const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [items, setItems] = useState<OrderItem[]>([{ id: '1', name: '', price: 250 }]);
+  // 預設金額改為 300
+  const [items, setItems] = useState<FormItem[]>([{ id: '1', name: '', price: 300 }]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
   const [isPaid, setIsPaid] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -37,7 +45,8 @@ export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
   };
 
   const addItem = () => {
-    setItems([...items, { id: Date.now().toString(), name: '', price: 250 }]);
+    // 新增項目預設金額為 300
+    setItems([...items, { id: Date.now().toString(), name: '', price: 300 }]);
   };
 
   const removeItem = (id: string) => {
@@ -46,7 +55,7 @@ export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
     }
   };
 
-  const updateItem = (id: string, field: keyof OrderItem, value: string | number) => {
+  const updateItem = (id: string, field: keyof FormItem, value: string | number) => {
     setItems(items.map(i => i.id === id ? { ...i, [field]: value } : i));
   };
 
@@ -86,11 +95,17 @@ export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
     // 將選擇的日期字串轉為 timestamp
     const selectedDateTimestamp = new Date(orderDate).getTime();
 
+    // 轉換表單資料為正式訂單格式 (處理價格為空字串的情況)
+    const finalItems: OrderItem[] = items.map(i => ({
+      ...i,
+      price: i.price === '' ? 0 : Number(i.price)
+    }));
+
     const order = {
       id: Date.now().toString(),
       customerName: name,
       customerPhone: phone,
-      items,
+      items: finalItems,
       totalAmount,
       isPaid,
       paymentMethod,
@@ -104,7 +119,7 @@ export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
     // Reset form
     setName('');
     setPhone('');
-    setItems([{ id: Date.now().toString(), name: '', price: 250 }]);
+    setItems([{ id: Date.now().toString(), name: '', price: 300 }]);
     setIsPaid(false);
     setPhotoPreview(null);
     setOrderDate(new Date().toISOString().split('T')[0]); // Reset date to today
@@ -224,9 +239,9 @@ export const OrderForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
                   <input
                     type="number"
                     value={item.price}
-                    onChange={(e) => updateItem(item.id, 'price', Number(e.target.value))}
+                    onChange={(e) => updateItem(item.id, 'price', e.target.value)}
                     className="w-full p-2.5 pl-6 border border-gray-300 rounded-lg text-base text-right font-medium focus:ring-1 focus:ring-ikea-blue outline-none"
-                    placeholder="250"
+                    placeholder="300"
                   />
                 </div>
               </div>
