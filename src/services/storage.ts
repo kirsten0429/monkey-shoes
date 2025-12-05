@@ -19,6 +19,12 @@ export const updateOrder = (updatedOrder: Order): void => {
   }
 };
 
+export const deleteOrder = (orderId: string): void => {
+  const orders = getOrders();
+  const newOrders = orders.filter(o => o.id !== orderId);
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(newOrders));
+};
+
 export const getOrders = (): Order[] => {
   const data = localStorage.getItem(ORDERS_KEY);
   return data ? JSON.parse(data) : [];
