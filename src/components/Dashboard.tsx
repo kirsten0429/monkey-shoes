@@ -9,7 +9,6 @@ export const Dashboard: React.FC = () => {
   const orders = getOrders();
 
   const stats = useMemo(() => {
-    const now = new Date();
     const data: Record<string, number> = {};
     
     orders.forEach(order => {
@@ -72,7 +71,7 @@ export const Dashboard: React.FC = () => {
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
               />
               <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                {stats.map((entry, index) => (
+                {stats.map((_entry, index) => (
                   <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#0051ba' : '#ffda1a'} />
                 ))}
               </Bar>

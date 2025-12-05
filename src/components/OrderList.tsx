@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Package, CheckCircle, XCircle, DollarSign, Image as ImageIcon } from 'lucide-react';
-import { Order } from '../types';
+import type { Order } from '../types';
 import { getOrders, updateOrder } from '../services/storage';
 
 export const OrderList: React.FC = () => {

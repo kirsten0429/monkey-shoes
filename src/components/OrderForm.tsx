@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Plus, Trash2, Save } from 'lucide-react';
-import { OrderItem, PaymentMethod } from '../types';
+import type { OrderItem, PaymentMethod } from '../types';
 import { saveOrder, getCustomers } from '../services/storage';
 
 // 常見品牌與顏色清單

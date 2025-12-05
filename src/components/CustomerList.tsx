@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Star, User } from 'lucide-react';
-import { Customer } from '../types';
+import type { Customer } from '../types';
 import { getCustomers, toggleManualVip } from '../services/storage';
 
 export const CustomerList: React.FC = () => {

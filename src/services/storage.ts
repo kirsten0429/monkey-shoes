@@ -1,4 +1,4 @@
-import { Order, Customer } from '../types';
+import type { Order, Customer } from '../types';
 
 const ORDERS_KEY = 'monkey_shoe_orders';
 const CUSTOMERS_KEY = 'monkey_shoe_customers';
